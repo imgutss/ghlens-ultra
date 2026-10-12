@@ -8,8 +8,8 @@
 
 **Cloudflare Workers · D1 · KV · Queues · Durable Objects · Workers AI**
 
-[![CI](https://github.com/Alisarani7021/ghlens-ultra/actions/workflows/ci.yml/badge.svg)](https://github.com/Alisarani7021/ghlens-ultra/actions/workflows/ci.yml)
-[![Deploy](https://github.com/Alisarani7021/ghlens-ultra/actions/workflows/deploy.yml/badge.svg)](https://github.com/Alisarani7021/ghlens-ultra/actions/workflows/deploy.yml)
+[![CI](https://github.com/imgutss/ghlens-ultra/actions/workflows/ci.yml/badge.svg)](https://github.com/imgutss/ghlens-ultra/actions/workflows/ci.yml)
+[![Deploy](https://github.com/imgutss/ghlens-ultra/actions/workflows/deploy.yml/badge.svg)](https://github.com/imgutss/ghlens-ultra/actions/workflows/deploy.yml)
 [![tests](https://img.shields.io/badge/tests-485%20passing-3fb950?style=flat-square)](#دروازهٔ-کیفیت)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Cloudflare](https://img.shields.io/badge/Cloudflare-Workers-f38020?style=flat-square&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
@@ -120,7 +120,7 @@ flowchart TB
 #    هر پوش به main → تست → انتشار → تست سلامت
 
 # ۳) دستی
-git clone https://github.com/Alisarani7021/ghlens-ultra && cd ghlens-ultra
+git clone https://github.com/imgutss/ghlens-ultra && cd ghlens-ultra
 npm ci
 ./scripts/bootstrap.sh     # منابع کلودفلر + اسکیمای D1 + انتشار
 ./scripts/set-secrets.sh   # BOT_TOKEN · GITHUB_TOKEN · کلیدهای CF

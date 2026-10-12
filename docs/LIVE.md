@@ -9,7 +9,7 @@
 | 🤖 ربات | [`@Gitguts_bot`](https://t.me/Gitguts_bot) |
 | 🌐 Worker | `https://ghlens-ultra.gitguts.workers.dev` |
 | 🏦 اکانت کلادفلر | `88a4e920dc6f9606c9987b872ac9ed69` (the account that owns the worker) |
-| 📦 مخزن گیت‌هاب | [github.com/Alisarani7021/ghlens-ultra](https://github.com/Alisarani7021/ghlens-ultra) (عمومی، ۱۱۲ فایل) |
+| 📦 مخزن گیت‌هاب | [github.com/imgutss/ghlens-ultra](https://github.com/imgutss/ghlens-ultra) (عمومی، ۱۱۲ فایل) |
 | 🚀 CI/CD | هر پوش به `main` → تایپ‌چک + گارد SQL + گارد کلید تکراری + **۲۳۶ تست** → انتشار روی Cloudflare → تست سلامت زنده و بررسی عمیق ✅ |
 | 🕓 آخرین دیپلوی | ۲۰۲۶-۰۹-۲۳ — **توسط GitHub Actions** (`bcbc48f`: آواتار، بنر استارت، راهنمای کامل، حذف کامل صدا) |
 

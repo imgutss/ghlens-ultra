@@ -305,7 +305,7 @@ export function gatewayLanding(base: string): Response {
 </style></head><body><main>
 <h1>🧠 دروازهٔ هوش مصنوعی</h1>
 <p>این آدرس یک API سازگار با OpenAI است: هر برنامه‌ای که <code>api.openai.com</code> را صدا می‌زند، با عوض‌کردن آدرس، به این ربات وصل می‌شود — با مسیریابی خودکار بین مدل‌ها، استخر کلیدهای اهدایی و گزارش مصرف.</p>
-<div class="row"><a class="btn" href="${base}/v1/models">GET /v1/models</a><a class="btn alt" href="${base}/health">وضعیت سرویس</a><a class="btn alt" href="https://github.com/Alisarani7021/ghlens-ultra">سورس</a></div>
+<div class="row"><a class="btn" href="${base}/v1/models">GET /v1/models</a><a class="btn alt" href="${base}/health">وضعیت سرویس</a><a class="btn alt" href="https://github.com/imgutss/ghlens-ultra">سورس</a></div>
 
 <h2>۱) آدرس‌ها</h2>
 <table><tr><th>متد</th><th>مسیر</th><th>کار</th></tr>

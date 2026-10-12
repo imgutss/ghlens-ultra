@@ -2721,7 +2721,7 @@ function escapeHtml(s: string) {
  */
 function landing(env: Env) {
   const bot = botUsername(env);
-  const repo = "Alisarani7021/ghlens-ultra";
+  const repo = "imgutss/ghlens-ultra";
   const raw = `https://raw.githubusercontent.com/${repo}/main/docs/assets`;
   const health = `${env.WORKER_URL ?? ""}/health`;
   const year = new Date().getFullYear();

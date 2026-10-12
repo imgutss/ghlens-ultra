@@ -60,7 +60,7 @@
 
 آن توکن در **Secret** مخزن گیت‌هاب زندگی می‌کند:
 
-- مسیر: `github.com/Alisarani7021/ghlens-ultra` → **Settings → Secrets and variables → Actions**
+- مسیر: `github.com/imgutss/ghlens-ultra` → **Settings → Secrets and variables → Actions**
 - سه رازِ مربوطه: `CLOUDFLARE_API_TOKEN` · `CLOUDFLARE_ACCOUNT_ID` (مقدارش `88a4e920dc6f9606c9987b872ac9ed69` است) · `TELEGRAM_WEBHOOK_SECRET`
 
 **جایگزین‌کردن توکن با توکن تازه** (مثلاً وقتی قدیمی منقضی شود یا بخواهی عوضش کنی): همان صفحه → روی `CLOUDFLARE_API_TOKEN` → **Update secret** → مقدار جدید را بچسبان. همین. هیچ فایلی در ریپو عوض نمی‌شود، چون secret هرگز در کد نیست.
@@ -71,7 +71,7 @@
 
 ```bash
 # ۱) پیش‌نیازها: Node 20+ و یک ترمینال
-git clone https://github.com/Alisarani7021/ghlens-ultra.git
+git clone https://github.com/imgutss/ghlens-ultra.git
 cd ghlens-ultra && npm install
 
 # ۲) توکن را به wrangler بشناسان (متغیر محیطی — هرگز داخل فایل ننویس)

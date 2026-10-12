@@ -2,11 +2,11 @@
 
 # 📦 گذاشتن پروژه روی گیت‌هاب خودت
 
-**انجام شد ✅** — مخزن عمومی در [github.com/Alisarani7021/ghlens-ultra](https://github.com/Alisarani7021/ghlens-ultra) ساخته و پوش شد، و CI/CD هم فعال است (هر پوش خودش منتشر می‌کند). این سند برای دفعه‌ی بعد یا برای کسی که بخواهد fork کند باقی می‌ماند.
+**انجام شد ✅** — مخزن عمومی در [github.com/imgutss/ghlens-ultra](https://github.com/imgutss/ghlens-ultra) ساخته و پوش شد، و CI/CD هم فعال است (هر پوش خودش منتشر می‌کند). این سند برای دفعه‌ی بعد یا برای کسی که بخواهد fork کند باقی می‌ماند.
 
 **پاسخ کوتاه (زمان پرسیدن سؤال):** نه، تا آن موقع هیچ ریپویی روی گیت‌هاب تو ساخته نشده بود. پروژه در «ورک‌اسپیس» ما و روی Cloudflare زنده است، ولی روی گیت‌هاب تو نه. الان همه‌چیز آماده‌ی پوش است: تاریخچه‌ی گیت ساخته شده، کامیت ثبت شده، تگ `v0.1.0` خورده و فایل‌ها برای هر سه روش زیر آماده‌اند.
 
-> روی اکانت `Alisarani7021` در حال حاضر یک ریپوی عمومی داری (`Ancient-Iran-`). ریپوی این پروژه هنوز وجود ندارد.
+> روی اکانت `imgutss` در حال حاضر یک ریپوی عمومی داری (`Ancient-Iran-`). ریپوی این پروژه هنوز وجود ندارد.
 
 ---
 
@@ -43,7 +43,7 @@ bash scripts/publish-to-github.sh --token ghp_xxxxxxx --repo ghlens-ultra --priv
 tar -xzf ghlens-ultra-src.tar.gz && cd ghlens
 git init -b main && git add -A
 git commit -m "GitHub Lens Ultra v0.1.0"
-git remote add origin https://github.com/Alisarani7021/ghlens-ultra.git
+git remote add origin https://github.com/imgutss/ghlens-ultra.git
 git push -u origin main --tags
 ```
 
@@ -51,7 +51,7 @@ git push -u origin main --tags
 
 ```bash
 git clone ghlens-ultra.bundle ghlens-ultra
-cd ghlens-ultra && git remote set-url origin https://github.com/Alisarani7021/ghlens-ultra.git
+cd ghlens-ultra && git remote set-url origin https://github.com/imgutss/ghlens-ultra.git
 git push -u origin main --tags
 ```
 

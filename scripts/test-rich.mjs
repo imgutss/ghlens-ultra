@@ -25,7 +25,7 @@ const rich =
   R.table([["بخش", "کار"], ["🔍 جست‌وجو", "معنایی + متنی"], ["🌌 هاب", "رویداد → انتشار"]], { caption: "⚡ توانایی‌ها" }) +
   R.details("🎯 از کجا شروع کنیم؟", R.ul(["یک موضوع بنویس", "owner/repo بفرست"]), true) +
   R.hr() +
-  R.footer("🐙 Alisarani7021 · 🧠 آماده");
+  R.footer("🐙 imgutss · 🧠 آماده");
 
 const legacy = R.richToLegacy(rich);
 

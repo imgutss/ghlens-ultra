@@ -163,7 +163,7 @@
   window.fetch = function (input, init) {
     const url = typeof input === 'string' ? input : (input && input.url) || '';
     if (url.indexOf('/api/') === -1) return realFetch ? realFetch(input, init) : Promise.reject(new Error('offline'));
-    if (url.indexOf('/api/me') === 0) return json({ linked: true, login: 'Alisarani7021', linked_at: Date.now() - 86400000 });
+    if (url.indexOf('/api/me') === 0) return json({ linked: true, login: 'imgutss', linked_at: Date.now() - 86400000 });
     if (url.indexOf('/api/gems') === 0) return json({ items: items.slice().reverse() });
     if (url.indexOf('/api/search') === 0) return json({ items: items.slice(0, 5), note: 'پیش‌نمایش آفلاین — داده نمونه' });
     if (url.indexOf('/api/repo') === 0) {

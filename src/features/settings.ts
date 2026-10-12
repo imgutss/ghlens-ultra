@@ -152,7 +152,7 @@ export class Settings {
       footer(
         `🐙 <code>${tgEscape(login)}</code> · 🧠 ${aiState} · ` +
         (fa ? "۹۳ فرمان" : "93 commands") +
-        ` · <a href="https://github.com/Alisarani7021/ghlens-ultra">github.com/Alisarani7021/ghlens-ultra</a>`,
+        ` · <a href="https://github.com/imgutss/ghlens-ultra">github.com/imgutss/ghlens-ultra</a>`,
       );
 
     // The artwork photo used to ride in front of this card on a fresh /start.
@@ -204,7 +204,7 @@ export class Settings {
       footer(
         (fa ? "صفحهٔ ۲ از ۲" : "page 2 of 2") +
         " · 🧠 " + (await aiEngineState(h.env)) +
-        ` · <a href="https://github.com/Alisarani7021/ghlens-ultra">github.com/Alisarani7021/ghlens-ultra</a>`,
+        ` · <a href="https://github.com/imgutss/ghlens-ultra">github.com/imgutss/ghlens-ultra</a>`,
       );
 
     await h.replyRich(
@@ -376,8 +376,8 @@ export class Settings {
         .join("") +
       hr() +
       footer(fa
-        ? `۹۳ فرمان · ۵ زبان · <a href="https://github.com/Alisarani7021/ghlens-ultra">ghlens-ultra</a>`
-        : `93 commands · 5 languages · <a href="https://github.com/Alisarani7021/ghlens-ultra">ghlens-ultra</a>`);
+        ? `۹۳ فرمان · ۵ زبان · <a href="https://github.com/imgutss/ghlens-ultra">ghlens-ultra</a>`
+        : `93 commands · 5 languages · <a href="https://github.com/imgutss/ghlens-ultra">ghlens-ultra</a>`);
 
     await h.replyRich(
       rich,
