@@ -30,7 +30,7 @@ export class MyChannels {
     const list = (rows?.results ?? []) as any[];
 
     const head = fa
-      ? `📡 <b>کانال من</b>\n\nچنل یا ابرگروهَ خودت را وصل کن تا ربات زیر هر پستش یک تحلیل خودمونی بگذارد — پستِ ریپو از دیتای زندهٔ گیت‌هاب، هر پست دیگری از خودِ متنش. چنل‌هایی که سوپرگروه ساخته شده‌اند هم قبول هستند.`
+      ? `📡 <b>کانال من</b>\n\nچنل یا ابرگروهَ خودت را وصل کن تا ربات زیر هر پستش یک تحلیل کوتاه و حرفه‌ای بگذارد — پستِ ریپو از دیتای زندهٔ گیت‌هاب، هر پست دیگری از خودِ متنش. فقط چنل‌هایی که از همین‌جا وصل شوند تحلیل می‌شوند.`
       : `📡 <b>My channel</b>\n\nWire your channel and every post grows a casual analysis right under it — repo posts from live GitHub data, anything else from the post's own words.`;
 
     if (!list.length) {

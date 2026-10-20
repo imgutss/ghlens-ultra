@@ -30,6 +30,9 @@ export interface MessageEntity {
 }
 
 export interface Message {
+  /** true when this is a channel post auto-forwarded into its linked discussion group — a reply to it is a comment on the post */
+  is_automatic_forward?: boolean;
+  forward_from_chat?: { id: number | string; title?: string; username?: string; type?: string };
   message_id: number;
   message_thread_id?: number;
   from?: User;

@@ -78,16 +78,30 @@ async function casBudget(env: Env, chat: string | number): Promise<boolean> {
   }
 }
 
-/** A reply that lands right under the post it belongs to — or, if the post
- *  is gone or too old to reply to, as the next message. Never an error. */
-async function sendUnder(tg: Telegram, chat: string | number, mid: number, text: string): Promise<void> {
+/** A reply that lands right under the post it belongs to — and nowhere
+ *  else. The owner was explicit: the analysis may only ever ride attached
+ *  under the post it analyses; a standalone post in the channel feed is
+ *  pollution. If Telegram refuses the reply, the analysis is dropped —
+ *  silence beats a stray post. */
+async function sendUnder(tg: Telegram, chat: string | number, mid: number, text: string): Promise<boolean> {
   const r: any = await tg.call("sendMessage", {
     chat_id: chat, text, reply_to_message_id: mid,
     link_preview_options: { is_disabled: true },
   }).catch(() => null);
-  if (!r?.ok) {
-    await tg.call("sendMessage", { chat_id: chat, text, link_preview_options: { is_disabled: true } }).catch(() => null);
-  }
+  return !!r?.ok;
+}
+
+/** What remains of a post once its links, tags and handles are gone — a
+ *  bare link is not a post worth an analysis, and pretending otherwise
+ *  once produced a paragraph about the shape of a bird emoji. */
+function meatOf(text: string): string {
+  return String(text ?? "")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/www\.\S+/g, "")
+    .replace(/#[\p{L}\p{N}_]+/gu, "")
+    .replace(/@[\w]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** The storyteller for a post that points at a repository: ten casual lines
@@ -135,17 +149,47 @@ export async function casualRepoReply(
   }
 }
 
-/** The storyteller for any other post: the same ten casual lines about what
+/** The storyteller for any other post: a few professional lines about what
  *  the post itself says — grounded in its own words, nothing invented. */
 export async function casualPostReply(
   env: Env, tg: Telegram, ai: AiBrain, chat: string | number, mid: number, text: string,
 ): Promise<void> {
   try {
+    if (meatOf(text).length < 25) return;  // a bare link deserves silence, not a paragraph
     if (!(await casBudget(env, chat))) return;
     const out = await ai.analyzePostCasual(text);
     const body = String(out ?? "").trim();
     if (body.length < 40) return;
     await sendUnder(tg, chat, mid, body.slice(0, 3500) + "\n\n🤖 تحلیل خودکار گیت‌لنز");
+  } catch (e: any) {
+    console.error("lens-swallowed", String(e?.message ?? e));
+  }
+}
+
+/** The comment path: a channel with a linked discussion group auto-forwards
+ *  every post into the group, and a reply to that forward is a comment under
+ *  the post — the exact shape the owner pointed at. The forward carries the
+ *  post's own text, so the storyteller has everything it needs. */
+export async function storyUnderDiscussion(post: any, env: Env, tg: Telegram, ai: AiBrain): Promise<void> {
+  try {
+    if (!post?.is_automatic_forward) return;
+    const channelId = Number(post?.forward_from_chat?.id ?? 0);
+    if (!channelId) return;
+    const log = (name: string, meta?: any) =>
+      new Store(env).event(channelId || null, "channelarm", name, meta).catch(() => null);
+    const reg = await env.DB.prepare(`SELECT auto FROM channels WHERE chat_id=?`).bind(channelId).first().catch(() => null);
+    if (!reg || !Number((reg as any).auto)) { await log("disc:quiet", { mid: post.message_id }); return; }
+    const text = String(post?.text ?? post?.caption ?? "");
+    const full = repoFromText(text);
+    if (full) {
+      await casualRepoReply(env, tg, ai, post.chat.id, post.message_id, full);
+      await log("disc:casual:repo", { mid: post.message_id, full });
+    } else if (meatOf(text).length >= 25) {
+      await casualPostReply(env, tg, ai, post.chat.id, post.message_id, text);
+      await log("disc:casual:post", { mid: post.message_id });
+    } else {
+      await log("disc:casual:thin", { mid: post.message_id });
+    }
   } catch (e: any) {
     console.error("lens-swallowed", String(e?.message ?? e));
   }
@@ -158,6 +202,7 @@ export async function casualPostReply(
  *  channel's admin membership is consent enough. */
 export async function storyUnderSupergroup(post: any, env: Env, tg: Telegram, ai: AiBrain): Promise<void> {
   try {
+    if (post?.is_automatic_forward) return;  // discussion forwards are comments, not posts
     const text = String(post?.text ?? post?.caption ?? "");
     if (!text || text.startsWith("/")) return;
     if (post?.from?.is_bot) return;
@@ -206,12 +251,15 @@ export async function armChannelPost(post: any, env: Env, tg: Telegram, ai?: AiB
   /* the glass keys — repo posts only */
   if (full) await armKeys(post, env, tg, full, log);
 
-  /* the storyteller — every post: the repo when the post points at one,
-   * the post's own content otherwise. A #بدونتحلیل tag opts a post out,
-   * and a channel wired with the switch off stays quiet (keys stay). */
+  /* The storyteller — ONLY for channels wired through «کانال من». The
+   * owner's rule: nobody's channel is analysed until its owner connects it
+   * there; admin membership arms the glass keys but never the analysis.
+   * A #بدونتحلیل tag opts a single post out; the switch turns the whole
+   * channel off. */
   if (!ai) return;
   const reg = await env.DB.prepare(`SELECT auto FROM channels WHERE chat_id=?`).bind(chatId).first().catch(() => null);
-  if (reg && !Number((reg as any).auto)) { await log("casual:off", { mid }); return; }
+  if (!reg) { await log("casual:unwired", { mid }); return; }
+  if (!Number((reg as any).auto)) { await log("casual:off", { mid }); return; }
   if (/#بدونتحلیل|#noai/i.test(text)) { await log("casual:off-tag", { mid }); return; }
   if (full) {
     await casualRepoReply(env, tg, ai, chatId, mid, full);
