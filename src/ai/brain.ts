@@ -711,6 +711,31 @@ export class AiBrain {
     );
   }
 
+  /** The showcase post's storyteller — the dossier's casual cousin. Ten
+   *  spoken-style Persian lines that land right under the channel post,
+   *  same real data, same honesty rules, a friend's tone. */
+  analyzeRepoCasual(meta: any) {
+    return this.chat(
+      `این مخزن گیت‌هاب را با لحن خودمونی فارسی معرفی کن — مثل دوستی که پروژه را استفاده کرده و دارد برایت تعریفش می‌کند.\n` +
+        `Data: ${JSON.stringify({
+          full_name: meta.full_name, description: meta.description, stars: meta.stars, forks: meta.forks,
+          issues: meta.issues, language: meta.language, topics: (meta.topics ?? []).slice(0, 12),
+          license: meta.license, archived: meta.archived, pushed_at: meta.pushed_at, created_at: meta.created_at,
+          contributors: meta.contributors, releases_last_year: meta.releases,
+          readme_excerpt: String(meta.readme_excerpt ?? "").slice(0, 1500),
+          recent_commits: (meta.recent_commits ?? []).slice(0, 10),
+        })}\n` +
+        `قواعد — صادق باش، خودمونی باش:\n` +
+        `- هر جمله باید از دادهٔ بالا دربیاید. چیزی که در داده نیست (تست‌ها، امنیت، آینده) حدس نزن.\n` +
+        `- متن ساده: بدون HTML، بدون مارک‌داون، بدون بولت و خط تیره.\n` +
+        `- ۸ تا ۱۰ خط کوتاه. خط اول با یک قلاب شروع شود (سؤال یا جملهٔ گیرا). خط آخر جمع‌بندی یک‌خطی.\n` +
+        `- حداکثر دو اموجی.\n` +
+        `- ضعف واقعی که در داده دیده می‌شود (تک‌مشارکت‌کننده بودن، کم بودن ستاره، نبود ریلیز) را با همان صمیمیت بگو، نه با تعارف.\n` +
+        `- اسم پروژه را در یکی از دو خط اول بیاور.`,
+      { tier: "smart", max_tokens: 700, cacheKey: `cas1:${meta.full_name}:${meta.stars}`, cacheTtl: 604800 },
+    );
+  }
+
   /** Semantic query understanding for search: Persian/English NL → GitHub search query. */
   /**
    * Search planner, with an output sanity gate.
