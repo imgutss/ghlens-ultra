@@ -1,6 +1,6 @@
 import { NetRadar } from "./features/netradar";
 import { ArchitectureExplainer } from "./features/architecture";
-import { armChannelPost, channelRepoKb, repoFromText } from "./features/channelarm";
+import { armChannelPost, channelRepoKb, repoFromText, storyUnderSupergroup } from "./features/channelarm";
 import { deepLinkGate } from "./features/deeplink";
 import { AppGen } from "./features/appgen";
 import { MultiHub } from "./features/multihub";
@@ -566,6 +566,11 @@ async function handleUpdate(update: Update, env: Env, ctx: Ctx) {
        analysis, translation, the card — as deep links any reader can press. */
     if (update.channel_post) return await armChannelPost(update.channel_post, env, tg, ai);
     if (update.message) {
+      /* a supergroup wired as a channel posts as ordinary messages, not
+         channel_posts — the storyteller runs under those too */
+      if (update.message.chat?.type === "supergroup") {
+        ctx.waitUntil(storyUnderSupergroup(update.message, env, tg, ai).catch(() => null));
+      }
       guard.chatId = update.message.chat.id;
       /* a message carrying custom emojis teaches the premium table its pairs:
          entity says the id, the text under it says the emoji. One pasted

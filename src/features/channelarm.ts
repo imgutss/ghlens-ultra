@@ -151,6 +151,38 @@ export async function casualPostReply(
   }
 }
 
+/** A supergroup used as a channel (admin-only posting) never produces
+ *  channel_post updates — its posts arrive as ordinary messages. The same
+ *  storyteller runs under them, but only for supergroups explicitly wired
+ *  through «کانال من»: a discussion group must ask for the analysis, while a
+ *  channel's admin membership is consent enough. */
+export async function storyUnderSupergroup(post: any, env: Env, tg: Telegram, ai: AiBrain): Promise<void> {
+  try {
+    const text = String(post?.text ?? post?.caption ?? "");
+    if (!text || text.startsWith("/")) return;
+    if (post?.from?.is_bot) return;
+    if (post?.reply_markup?.inline_keyboard?.length) return;
+    const chatId = Number(post?.chat?.id ?? 0);
+    if (!chatId) return;
+    const log = (name: string, meta?: any) =>
+      new Store(env).event(chatId || null, "channelarm", name, meta).catch(() => null);
+    const reg = await env.DB.prepare(`SELECT auto FROM channels WHERE chat_id=?`).bind(chatId).first().catch(() => null);
+    if (!reg || !Number((reg as any).auto)) { await log("sg:quiet"); return; }
+    const full = repoFromText(text);
+    if (full) {
+      await casualRepoReply(env, tg, ai, chatId, post.message_id, full);
+      await log("sg:casual:repo", { mid: post.message_id, full });
+    } else if (text.trim().length >= 40) {
+      await casualPostReply(env, tg, ai, chatId, post.message_id, text);
+      await log("sg:casual:post", { mid: post.message_id });
+    } else {
+      await log("sg:casual:thin", { mid: post.message_id });
+    }
+  } catch (e: any) {
+    console.error("lens-swallowed", String(e?.message ?? e));
+  }
+}
+
 /** Arm one channel post, or leave it alone. Every outcome is written to the
  *  events table (kind `channelarm`), so a post that did not grow keys can be
  *  diagnosed from the data instead of a screenshot. */
