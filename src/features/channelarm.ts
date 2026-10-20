@@ -251,25 +251,13 @@ export async function armChannelPost(post: any, env: Env, tg: Telegram, ai?: AiB
   /* the glass keys — repo posts only */
   if (full) await armKeys(post, env, tg, full, log);
 
-  /* The storyteller — ONLY for channels wired through «کانال من». The
-   * owner's rule: nobody's channel is analysed until its owner connects it
-   * there; admin membership arms the glass keys but never the analysis.
-   * A #بدونتحلیل tag opts a single post out; the switch turns the whole
-   * channel off. */
-  if (!ai) return;
-  const reg = await env.DB.prepare(`SELECT auto FROM channels WHERE chat_id=?`).bind(chatId).first().catch(() => null);
-  if (!reg) { await log("casual:unwired", { mid }); return; }
-  if (!Number((reg as any).auto)) { await log("casual:off", { mid }); return; }
-  if (/#بدونتحلیل|#noai/i.test(text)) { await log("casual:off-tag", { mid }); return; }
-  if (full) {
-    await casualRepoReply(env, tg, ai, chatId, mid, full);
-    await log("casual:repo", { mid, full });
-  } else if (text.trim().length >= 40) {
-    await casualPostReply(env, tg, ai, chatId, mid, text);
-    await log("casual:post", { mid });
-  } else {
-    await log("casual:thin", { mid });
-  }
+  /* No storyteller here — ever. A bot reply inside a channel is just
+   * another channel post with a reply header, and the owner's rule is
+   * absolute: the analysis must ride under the post as a *comment*, which
+   * only exists in the channel's linked discussion group. That path lives
+   * in storyUnderDiscussion, fed by the group's auto-forward of this very
+   * post. Here, only the glass keys. */
+  void ai;
 }
 
 /** The keys part: markup-only edit first — the post stays EXACTLY as its

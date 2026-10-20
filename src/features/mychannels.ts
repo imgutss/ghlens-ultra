@@ -6,18 +6,21 @@ import { setMode, clearMode } from "../core/mode";
 /**
  * MY CHANNEL — the storyteller's front door.
  *
- * The analysis under channel posts works by silent consent: make the bot an
- * admin and it begins. But "add an admin somewhere in Telegram's settings"
- * is a secret, not a feature — a channel owner who wants the storyteller has
- * to know it exists. This section is the door: any user can wire their
- * channel from inside the bot, see it registered, switch the storyteller on
- * and off per channel, read what it has been doing, and unplug it.
+ * The analysis under channel posts works ONLY as a comment in the channel's
+ * linked discussion group — a bot reply inside the channel itself is just
+ * another channel post, which the owner forbade. So wiring a channel means
+ * three real checks, each read from the Telegram API, never assumed:
  *
- * Every check is real, never assumed: the channel must resolve through the
- * Telegram API, and the bot must actually be an administrator there before
- * anything is saved. A channel that is not registered here still gets the
- * storyteller (admin membership is consent enough) — registration adds
- * control, not permission.
+ *   1. the bot is an administrator of the channel (post rights);
+ *   2. the channel has a linked discussion group (comments enabled);
+ *   3. the bot is an administrator of that group (so it receives the
+ *      auto-forward of every post and its reply lands as a comment).
+ *
+ * A supergroup wired as a channel skips 2 and 3 — its posts are ordinary
+ * messages and a reply under them already looks right.
+ *
+ * Every missing piece is named with its exact fix, and a re-check button
+ * re-runs the checks when the owner has done their part in Telegram.
  */
 export class MyChannels {
   /** Section home: the user's wired channels, and the door to a new one. */
@@ -25,19 +28,19 @@ export class MyChannels {
     const fa = h.loc === "fa";
     await clearMode(h.session).catch(() => null);
     const rows = await h.env.DB.prepare(
-      `SELECT chat_id, title, username, auto FROM channels WHERE owner_id=? ORDER BY connected_at DESC LIMIT 20`,
+      `SELECT chat_id, title, username, auto, kind FROM channels WHERE owner_id=? ORDER BY connected_at DESC LIMIT 20`,
     ).bind(h.u.id).all().catch(() => null);
     const list = (rows?.results ?? []) as any[];
 
     const head = fa
-      ? `📡 <b>کانال من</b>\n\nچنل یا ابرگروهَ خودت را وصل کن تا ربات زیر هر پستش یک تحلیل کوتاه و حرفه‌ای بگذارد — پستِ ریپو از دیتای زندهٔ گیت‌هاب، هر پست دیگری از خودِ متنش. فقط چنل‌هایی که از همین‌جا وصل شوند تحلیل می‌شوند.`
-      : `📡 <b>My channel</b>\n\nWire your channel and every post grows a casual analysis right under it — repo posts from live GitHub data, anything else from the post's own words.`;
+      ? `📡 <b>کانال من</b>\n\nچنل یا ابرگروهَ خودت را وصل کن تا ربات زیر هر پستش یک تحلیل کوتاه و حرفه‌ای بگذارد — پستِ ریپو از دیتای زندهٔ گیت‌هاب، هر پست دیگری از خودِ متنش. تحلیل فقط به‌صورت کامنتِ زیر پست می‌نشیند، نه پست جدا.`
+      : `📡 <b>My channel</b>\n\nWire your channel and every post grows a short professional analysis — repo posts from live GitHub data, anything else from the post's own words. The analysis rides as a comment under the post, never as a separate post.`;
 
     if (!list.length) {
       return h.reply(
         head + "\n\n" + (fa
-          ? `هنوز چنلی وصل نکرده‌ای. ربات باید <b>ادمین</b> چنلت باشد (حق ارسال پیام کافی است) — بقیه‌اش با من.`
-          : `No channel wired yet. The bot must be an <b>admin</b> of your channel (post rights are enough) — the rest is on me.`),
+          ? `هنوز چنلی وصل نکرده‌ای. ربات باید <b>ادمین چنل</b> باشد و <b>کامنت‌های چنل روشن</b> — بقیه‌اش با من.`
+          : `No channel wired yet. The bot must be an <b>admin of the channel</b> and the channel's <b>comments must be on</b> — the rest is on me.`),
         kb(
           [{ text: (fa ? "اتصال چنل" : "Wire a channel") + " ➕", cb: "ch:add" }],
           [{ text: (fa ? "بازگشت" : "Back") + " ◀️", cb: "m:home" }],
@@ -67,18 +70,18 @@ export class MyChannels {
     await setMode(h.session, "ch_link", {});
     return h.reply(
       (fa
-        ? `➕ <b>اتصال چنل</b>\n\n۱. در تلگرام وارد چنلت شو → <i>Manage Channel</i> → <i>Administrators</i> → <i>Add Admin</i>\n۲. ربات را اضافه کن — فقط حق <i>Post Messages</i> کافی است\n۳. حالا یکی از این دو را برایم بفرست:\n`
-        : `➕ <b>Wire a channel</b>\n\n1. In Telegram: your channel → <i>Manage Channel</i> → <i>Administrators</i> → <i>Add Admin</i>\n2. Add the bot — <i>Post Messages</i> right is enough\n3. Now send me one of these:\n`) +
+        ? `➕ <b>اتصال چنل</b>\n\n۱. در تلگرام: چنل → <i>Manage Channel</i> → <i>Administrators</i> → ربات را ادمین کن (حق <i>Post Messages</i>)\n۲. <i>Manage Channel</i> → <i>Discussion</i> → یک گروه بحث لینک کن (کامنت‌ها روشن شود) و ربات را <b>ادمین همان گروه هم بکن</b>\n۳. حالا یکی از این دو را بفرست:\n`
+        : `➕ <b>Wire a channel</b>\n\n1. In Telegram: channel → <i>Manage Channel</i> → <i>Administrators</i> → make the bot an admin (<i>Post Messages</i>)\n2. <i>Manage Channel</i> → <i>Discussion</i> → link a discussion group (comments on) and make the bot an <b>admin of that group too</b>\n3. Now send me one of these:\n`) +
       (fa
-        ? `   • یوزرنیم چنل، مثل <code>@mychannel</code>\n   • یا یک پست از چنل را فوروارد کن\n\nادمین‌بودنم را خودم از API تلگرام چک می‌کنم — حدس نمی‌زنم.`
-        : `   • the channel's username, like <code>@mychannel</code>\n   • or forward a post from the channel\n\nI verify my admin status through the Telegram API myself — no guessing.`),
+        ? `   • یوزرنیم چنل، مثل <code>@mychannel</code>\n   • یا یک پست از چنل را فوروارد کن\n\nادمین‌بودنم و روشن‌بودن کامنت‌ها را خودم از API تلگرام چک می‌کنم — حدس نمی‌زنم.\n\n⚠️ بدون گروهِ بحث، تحلیلی وجود ندارد: کامنتِ زیر پست تنها شکلی است که ربات حق دارد بگذارد.`
+        : `   • the channel's username, like <code>@mychannel</code>\n   • or forward a post from the channel\n\nI verify my admin status and the comments through the Telegram API myself — no guessing.\n\n⚠️ Without a discussion group there is no analysis: a comment under the post is the only form the bot is allowed to post.`),
       kb([{ text: (fa ? "بی‌خیال" : "Never mind") + " ❌", cb: "ch:home" }]),
       !!h.cbId,
     );
   }
 
   /** Mode handler: the message is a @username, a t.me link, or a forwarded
-   *  channel post. Verify for real, then register. */
+   *  channel post. Verify every precondition for real, then register. */
   async receiveLink(h: H, t: string) {
     const fa = h.loc === "fa";
     const fail = (why: string, hint = "") =>
@@ -124,34 +127,92 @@ export class MyChannels {
       );
     }
 
+    /* for a channel, the comment machinery must exist: a linked discussion
+     * group the bot administrates — otherwise there is nowhere legal for
+     * the analysis to live. Wire it anyway, name what is missing. */
+    let linkedChat: number | null = null;
+    if (type === "channel") {
+      const gc: any = await h.tg.call("getChat", { chat_id: chatId }).catch(() => null);
+      linkedChat = Number(gc?.result?.linked_chat_id ?? 0) || null;
+      if (!linkedChat) {
+        return fail(
+          fa ? "کامنت‌های این چنل بسته است." : "This channel's comments are off.",
+          fa ? "تحلیل فقط به‌صورت کامنتِ زیر پست می‌نشیند، و کامنت یعنی گروهِ بحثِ لینک‌شده.\n\n۱. چنل → <i>Manage Channel</i> → <i>Discussion</i> → یک گروه لینک کن\n۲. ربات را ادمین همان گروه بکن\n۳. دوباره یوزرنیم چنل را بفرست" : "The analysis only ever lands as a comment, and comments mean a linked discussion group.\n\n1. Channel → <i>Manage Channel</i> → <i>Discussion</i> → link a group\n2. Make the bot an admin of that group\n3. Send the channel's username again",
+        );
+      }
+      const gm: any = await h.tg.call("getChatMember", { chat_id: linkedChat, user_id: botId }).catch(() => null);
+      const gs = String(gm?.result?.status ?? "");
+      if (gm?.ok !== true || (gs !== "administrator" && gs !== "creator")) {
+        return fail(
+          fa ? "ربات هنوز ادمینِ گروه بحث چنل نیست." : "The bot is not an admin of the channel's discussion group yet.",
+          fa ? `در تلگرام وارد گروهِ بحث چنل شو → <i>Add Admin</i> → ربات را ادمین کن، بعد دوباره یوزرنیم چنل را بفرست.\n\n<i>بدون این قدم، پست‌های چنل به ربات نمی‌رسند.</i>` : `Open the channel's discussion group → <i>Add Admin</i> → make the bot an admin, then send the channel's username again.\n\n<i>Without this step the channel's posts never reach the bot.</i>`,
+        );
+      }
+    }
+
     await h.env.DB.prepare(
-      `INSERT INTO channels (chat_id, owner_id, title, username, auto, connected_at) VALUES (?,?,?,?,1,?) ON CONFLICT(chat_id) DO UPDATE SET owner_id=excluded.owner_id, title=excluded.title, username=excluded.username`,
-    ).bind(chatId, h.u.id, title ?? null, username ?? null, Date.now()).run().catch(() => null);
+      `INSERT INTO channels (chat_id, owner_id, title, username, auto, kind, linked_chat, connected_at) VALUES (?,?,?,?,1,?,?,?) ON CONFLICT(chat_id) DO UPDATE SET owner_id=excluded.owner_id, title=excluded.title, username=excluded.username, kind=excluded.kind, linked_chat=excluded.linked_chat`,
+    ).bind(chatId, h.u.id, title ?? null, username ?? null, type, linkedChat, Date.now()).run().catch(() => null);
     await clearMode(h.session).catch(() => null);
     await h.store.event(h.u.id, "channelwire", String(chatId)).catch(() => null);
     return this.view(h, Number(chatId), true);
+  }
+
+  /** Live state of the comment machinery for one wired channel. */
+  private async health(h: H, chatId: number, kind: string): Promise<{ ok: boolean; line: string; fix: string; recheck: boolean }> {
+    const fa = h.loc === "fa";
+    if (kind === "supergroup") {
+      return { ok: true, line: fa ? "✅ ابرگروه — تحلیل زیر پیام‌ها فعال است" : "✅ Supergroup — analysis under messages is live", fix: "", recheck: false };
+    }
+    const me: any = await h.tg.call("getMe").catch(() => null);
+    const botId = me?.result?.id;
+    const gc: any = await h.tg.call("getChat", { chat_id: chatId }).catch(() => null);
+    const linked = Number(gc?.result?.linked_chat_id ?? 0) || null;
+    if (!linked) {
+      return {
+        ok: false,
+        line: fa ? "⚠️ کامنت‌های چنل بسته است — تحلیل غیرفعال" : "⚠️ Channel comments are off — analysis paused",
+        fix: fa ? "چنل → <i>Manage Channel</i> → <i>Discussion</i> → یک گروه لینک کن؛ بعد اینجا «بررسی دوباره» را بزن" : "Channel → <i>Manage Channel</i> → <i>Discussion</i> → link a group, then press re-check here",
+        recheck: true,
+      };
+    }
+    const gm: any = botId ? await h.tg.call("getChatMember", { chat_id: linked, user_id: botId }).catch(() => null) : null;
+    const gs = String(gm?.result?.status ?? "");
+    if (gm?.ok !== true || (gs !== "administrator" && gs !== "creator")) {
+      return {
+        ok: false,
+        line: fa ? "⚠️ ربات ادمینِ گروهِ بحث نیست — تحلیل غیرفعال" : "⚠️ The bot is not an admin of the discussion group — analysis paused",
+        fix: fa ? "گروهِ بحث چنل → <i>Add Admin</i> → ربات را ادمین کن؛ بعد اینجا «بررسی دوباره» را بزن" : "Discussion group → <i>Add Admin</i> → make the bot an admin, then press re-check here",
+        recheck: true,
+      };
+    }
+    /* remember what we learned */
+    await h.env.DB.prepare(`UPDATE channels SET linked_chat=? WHERE chat_id=?`).bind(linked, chatId).run().catch(() => null);
+    return { ok: true, line: fa ? "✅ کامنت‌ها روشن و ربات در گروه بحث — تحلیل فعال" : "✅ Comments on, bot in the group — analysis live", fix: "", recheck: false };
   }
 
   /** One wired channel: its state, its story count, the switches. */
   async view(h: H, chatId: number, fresh = false) {
     const fa = h.loc === "fa";
     const row = await h.env.DB.prepare(
-      `SELECT chat_id, title, username, auto, connected_at FROM channels WHERE chat_id=? AND owner_id=?`,
+      `SELECT chat_id, title, username, auto, kind, connected_at FROM channels WHERE chat_id=? AND owner_id=?`,
     ).bind(chatId, h.u.id).first().catch(() => null);
     if (!row) return this.home(h);
     const stat = await h.env.DB.prepare(
-      `SELECT COUNT(*) AS n FROM events WHERE kind='channelarm' AND name LIKE 'casual%' AND user_id=?`,
+      `SELECT COUNT(*) AS n FROM events WHERE kind='channelarm' AND name LIKE '%casual%' AND user_id=?`,
     ).bind(chatId).first().catch(() => null);
     const n = Number((stat as any)?.n ?? 0);
     const name = tgEscape(String((row as any).title ?? (row as any).username ?? chatId));
     const link = (row as any).username ? ` — @${tgEscape(String((row as any).username))}` : "";
+    const health = await this.health(h, chatId, String((row as any).kind ?? "channel"));
     return h.reply(
       (fresh ? (fa ? "✅ <b>متصل شد!</b>\n\n" : "✅ <b>Wired!</b>\n\n") : "") +
       `📡 <b>${name}</b>${link}\n\n` +
-      (fa
-        ? `🤖 تحلیل خودکار پست‌ها: <b>${(row as any).auto ? "روشن" : "خاموش"}</b>\n📝 پست‌های تحلیل‌شده تا الان: <b>${n}</b>\n\nاز این به بعد زیر پست‌های این چنل، چند ثانیه بعد از انتشار، تحلیل خودمونی می‌نشیند.`
-        : `🤖 Post analysis: <b>${(row as any).auto ? "on" : "off"}</b>\n📝 posts analysed so far: <b>${n}</b>\n\nFrom now on, a casual analysis lands a few seconds under every post in this channel.`),
+      `${health.line}\n` +
+      (fa ? `🤖 تحلیل خودکار: <b>${(row as any).auto ? "روشن" : "خاموش"}</b>\n📝 پست‌های تحلیل‌شده: <b>${n}</b>` : `🤖 Analysis: <b>${(row as any).auto ? "on" : "off"}</b>\n📝 posts analysed: <b>${n}</b>`) +
+      (health.fix ? `\n\n${health.fix}` : ""),
       kb(
+        ...(health.recheck ? [[{ text: (fa ? "بررسی دوباره" : "Re-check") + " 🔄", cb: `ch:check:${chatId}` }]] : []),
         [{ text: ((row as any).auto ? (fa ? "خاموش کردن تحلیل" : "Turn analysis off") + " ⏸" : (fa ? "روشن کردن تحلیل" : "Turn analysis on") + " ▶️"), cb: `ch:toggle:${chatId}` }],
         [{ text: (fa ? "قطع اتصال" : "Unwire") + " 🔌", cb: `ch:off:${chatId}` }],
         [{ text: (fa ? "بازگشت" : "Back") + " ◀️", cb: "ch:home" }],
@@ -160,7 +221,17 @@ export class MyChannels {
     );
   }
 
-  /** Flip the storyteller for one channel — the keys under repo posts stay. */
+  /** Re-run the comment-machinery checks after the owner did their part. */
+  async check(h: H, chatId: number) {
+    const fa = h.loc === "fa";
+    const row = await h.env.DB.prepare(`SELECT kind FROM channels WHERE chat_id=? AND owner_id=?`).bind(chatId, h.u.id).first().catch(() => null);
+    if (!row) return this.home(h);
+    const health = await this.health(h, chatId, String((row as any).kind ?? "channel"));
+    await h.toast(health.ok ? (fa ? "همه‌چیز آماده ✅" : "All ready ✅") : (fa ? "هنوز کامل نیست" : "Not complete yet"));
+    return this.view(h, chatId);
+  }
+
+  /** Flip the storyteller for one channel. */
   async toggle(h: H, chatId: number) {
     const fa = h.loc === "fa";
     await h.env.DB.prepare(`UPDATE channels SET auto = 1 - auto WHERE chat_id=? AND owner_id=?`)
@@ -169,8 +240,7 @@ export class MyChannels {
     return this.view(h, chatId);
   }
 
-  /** Unwire: the row goes, and the channel is back to silent consent —
-   *  admin membership alone, no management, no switches. */
+  /** Unwire: the row goes, and the channel is back to untouched. */
   async disconnect(h: H, chatId: number) {
     const fa = h.loc === "fa";
     await h.env.DB.prepare(`DELETE FROM channels WHERE chat_id=? AND owner_id=?`)
@@ -178,8 +248,8 @@ export class MyChannels {
     await h.store.event(h.u.id, "channelunwire", String(chatId)).catch(() => null);
     return h.reply(
       fa
-        ? `🔌 اتصال <b>قطع شد</b> — این چنل دیگر در لیست تو نیست.\n\nاگر ربات همچنان ادمین چنل باشد، تحلیل زیر پست‌ها با همان رضایتِ ضمنی (ادمینی) ادامه می‌یابد؛ برای قطع کامل، ادمینی ربات را هم در تلگرام بردار.`
-        : `🔌 <b>Unwired</b> — the channel is no longer in your list.\n\nIf the bot is still an admin there, the post analysis continues on that implicit consent; remove the bot's admin role in Telegram to stop it fully.`,
+        ? `🔌 اتصال <b>قطع شد</b> — این چنل دیگر تحلیل نمی‌شود و هیچ پیامی در آن نمی‌گذارد.`
+        : `🔌 <b>Unwired</b> — this channel is no longer analysed and nothing is ever posted to it.`,
       kb([{ text: (fa ? "کانال‌های من" : "My channels") + " 📡", cb: "ch:home" }]),
       true,
     );

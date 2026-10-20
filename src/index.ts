@@ -1646,6 +1646,7 @@ async function routeCallback(q: CallbackQuery, env: Env, ctx: Ctx, tg: Telegram,
         if (action === "home") return mychannels.home(h);
         if (action === "add") return mychannels.add(h);
         if (action === "view") return mychannels.view(h, Number(args[0] ?? 0));
+        if (action === "check") return mychannels.check(h, Number(args[0] ?? 0));
         if (action === "toggle") return mychannels.toggle(h, Number(args[0] ?? 0));
         if (action === "off") return mychannels.disconnect(h, Number(args[0] ?? 0));
         break;

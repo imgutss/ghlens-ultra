@@ -5,7 +5,7 @@ import { h1, aside, p, table, footer, hr, sendRich, richToLegacy } from "../tg/r
 import { parseRepoRef } from "../core/repo-ref";
 import { setMode, clearMode, readMode, touchMode } from "../core/mode";
 import { GithubRest } from "../github/rest";
-import { channelRepoKb, casualRepoReply } from "./channelarm";
+import { channelRepoKb } from "./channelarm";
 import { botUsername, isAdmin } from "../env";
 
 /**
@@ -511,24 +511,12 @@ export class Showcase {
       ),
       !!h.cbId,
     );
-    /* The post's own storyteller: the moment the showcase is live, a short
-     * casual brief about the same repo lands right under it — ten honest
-     * lines in a friend's tone, from live data, never from imagination.
-     * The shared pipeline lives in channelarm (every wired channel uses
-     * it); it runs after the owner's confirmation so publishing never
-     * waits on it, and still inside the update's waitUntil window so it
-     * is guaranteed to finish. A failure is swallowed: a missing
-     * storyteller must never become an error message in the channel. */
-    if (mid) await casualRepoReply(h.env, h.tg, h.ai, target.send, mid, parts.ref);
+    /* The showcase post's analysis arrives as a comment now, through the
+     * same discussion-group path every other channel post takes: the
+     * post auto-forwards into the linked group, storyUnderDiscussion
+     * answers under it, and nothing is ever posted into the channel
+     * feed itself. Publishing here stays silent. */
     await done;
-  }
-
-  /** Ten casual Persian lines about the repo the channel post just
-   *  introduced, sent as a reply under that very post — now the shared
-   *  channelarm pipeline, so the showcase and every other wired channel
-   *  tell the same story the same honest way. */
-  async casualBelow(h: H, chat: string | number, mid: number, ref: string) {
-    await casualRepoReply(h.env, h.tg, h.ai, chat, mid, ref);
   }
 
   // ── the star — a real one, from inside Telegram ──────────────────────────

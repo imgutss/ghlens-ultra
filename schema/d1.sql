@@ -496,6 +496,8 @@ CREATE TABLE IF NOT EXISTS channels (
   title        TEXT,
   username     TEXT,
   auto         INTEGER NOT NULL DEFAULT 1,
+  kind         TEXT NOT NULL DEFAULT 'channel',
+  linked_chat  INTEGER,
   connected_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_channels_owner ON channels(owner_id);
