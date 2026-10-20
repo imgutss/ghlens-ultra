@@ -486,3 +486,16 @@ CREATE TABLE IF NOT EXISTS hub_gateway_log (
   ts                INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_hub_gw_ts ON hub_gateway_log(ts);
+
+-- ── wired channels: the storyteller's registry (who asked for what)
+--    Admin membership alone is consent enough for the post analysis; a row
+--    here adds control — a list, a per-channel switch, an owner.
+CREATE TABLE IF NOT EXISTS channels (
+  chat_id      INTEGER PRIMARY KEY,
+  owner_id     INTEGER NOT NULL,
+  title        TEXT,
+  username     TEXT,
+  auto         INTEGER NOT NULL DEFAULT 1,
+  connected_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_channels_owner ON channels(owner_id);

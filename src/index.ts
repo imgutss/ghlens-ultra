@@ -35,6 +35,7 @@ import { Discover } from "./features/discover";
 import { Contribute } from "./features/contribute";
 import { Settings, githubSetupCard, githubSetupKb, aiEngineState } from "./features/settings";
 import { Showcase } from "./features/showcase";
+import { MyChannels } from "./features/mychannels";
 import { Admin } from "./features/admin";
 import { handleWebhook } from "./core/webhook";
 import { runCron } from "./core/cron";
@@ -58,6 +59,7 @@ const search = new SearchFeature();
 const browse = new BrowseFeature();
 const scout = new DeepScout();
 const showcase = new Showcase();
+const mychannels = new MyChannels();
 const tools = new ToolsFeature();
 const devutils = new DevUtils();
 const profile = new ProfileFeature();
@@ -1235,6 +1237,7 @@ async function inputContext(h: H): Promise<((text: string) => Promise<void>) | n
       case "ask": return (t) => assistant.ask(h, t);
       /* the showcase wizard: link → style → (words → photos) → publish */
       case "sc_repo": return (t) => showcase.receiveRepo(h, t);
+      case "ch_link": return (t) => mychannels.receiveLink(h, t);
       case "sc_text": return (t) => showcase.receiveText(h, t);
       case "sc_photo": return (t) => showcase.receiveMedia(h, t);
       case "sc_preview": return async () => showcase.previewNudge(h);
@@ -1453,6 +1456,7 @@ async function routeCommand(cmd: string, arg: string, h: H, env: Env, ctx: Ctx) 
     case "/hash": return arg ? devutils.hash(h, arg) : devutils.hash(h, "");
     case "/jwt": return arg ? devutils.jwt(h, arg) : devutils.jwt(h);
 
+    case "/channel": case "/mychannel": return mychannels.home(h);
     case "/ai": case "/analyze": return arg ? assistant.dossier(h, normRepo(arg)) : assistant.home(h);
     case "/ask": return arg ? assistant.ask(h, arg) : assistant.home(h);
     case "/repochat": case "/chat": return assistant.repoChat(h, arg ? normRepo(arg) : "");
@@ -1628,6 +1632,15 @@ async function routeCallback(q: CallbackQuery, env: Env, ctx: Ctx, tg: Telegram,
         break;
       case "h":
         if (action === "main") return settings.help(h);
+        break;
+
+      // ── my channel: wire, switch, unwire ──
+      case "ch":
+        if (action === "home") return mychannels.home(h);
+        if (action === "add") return mychannels.add(h);
+        if (action === "view") return mychannels.view(h, Number(args[0] ?? 0));
+        if (action === "toggle") return mychannels.toggle(h, Number(args[0] ?? 0));
+        if (action === "off") return mychannels.disconnect(h, Number(args[0] ?? 0));
         break;
       case "lang":
         if (action === "menu") return settings.lang(h);

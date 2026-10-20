@@ -175,8 +175,11 @@ export async function armChannelPost(post: any, env: Env, tg: Telegram, ai?: AiB
   if (full) await armKeys(post, env, tg, full, log);
 
   /* the storyteller — every post: the repo when the post points at one,
-   * the post's own content otherwise. A #بدونتحلیل tag opts a post out. */
+   * the post's own content otherwise. A #بدونتحلیل tag opts a post out,
+   * and a channel wired with the switch off stays quiet (keys stay). */
   if (!ai) return;
+  const reg = await env.DB.prepare(`SELECT auto FROM channels WHERE chat_id=?`).bind(chatId).first().catch(() => null);
+  if (reg && !Number((reg as any).auto)) { await log("casual:off", { mid }); return; }
   if (/#بدونتحلیل|#noai/i.test(text)) { await log("casual:off-tag", { mid }); return; }
   if (full) {
     await casualRepoReply(env, tg, ai, chatId, mid, full);

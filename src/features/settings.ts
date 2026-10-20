@@ -497,6 +497,9 @@ export function menu2Rows(loc: Loc, isAdmin: boolean): Btn[][] {
   const fa = loc === "fa";
   return [
     [
+      { text: "📡 " + (fa ? "کانال من — تحلیل زیر پست‌ها" : "My channel"), cb: "ch:home" },
+    ],
+    [
       { text: "🌐 " + (fa ? "ابر‌مرکز دوآپس و هوش مصنوعی" : "Cloud & AI Hub"), cb: "hub:home" },
     ],
     [
