@@ -511,11 +511,6 @@ export class Showcase {
       ),
       !!h.cbId,
     );
-    /* The showcase post's analysis arrives as a comment now, through the
-     * same discussion-group path every other channel post takes: the
-     * post auto-forwards into the linked group, storyUnderDiscussion
-     * answers under it, and nothing is ever posted into the channel
-     * feed itself. Publishing here stays silent. */
     await done;
   }
 

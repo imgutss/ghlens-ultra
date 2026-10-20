@@ -1,6 +1,6 @@
 import { NetRadar } from "./features/netradar";
 import { ArchitectureExplainer } from "./features/architecture";
-import { armChannelPost, channelRepoKb, repoFromText, storyUnderDiscussion, storyUnderSupergroup } from "./features/channelarm";
+import { armChannelPost, channelRepoKb, repoFromText } from "./features/channelarm";
 import { deepLinkGate } from "./features/deeplink";
 import { AppGen } from "./features/appgen";
 import { MultiHub } from "./features/multihub";
@@ -35,7 +35,6 @@ import { Discover } from "./features/discover";
 import { Contribute } from "./features/contribute";
 import { Settings, githubSetupCard, githubSetupKb, aiEngineState } from "./features/settings";
 import { Showcase } from "./features/showcase";
-import { MyChannels } from "./features/mychannels";
 import { Admin } from "./features/admin";
 import { handleWebhook } from "./core/webhook";
 import { runCron } from "./core/cron";
@@ -59,7 +58,6 @@ const search = new SearchFeature();
 const browse = new BrowseFeature();
 const scout = new DeepScout();
 const showcase = new Showcase();
-const mychannels = new MyChannels();
 const tools = new ToolsFeature();
 const devutils = new DevUtils();
 const profile = new ProfileFeature();
@@ -564,15 +562,9 @@ async function handleUpdate(update: Update, env: Env, ctx: Ctx) {
     if (update.inline_query) return await routeInline(update.inline_query, env, ctx, tg, store, ai);
     /* A channel post with a GitHub link grows glass keys — architecture,
        analysis, translation, the card — as deep links any reader can press. */
-    if (update.channel_post) return await armChannelPost(update.channel_post, env, tg, ai);
+    if (update.channel_post) return await armChannelPost(update.channel_post, env, tg);
     if (update.message) {
-      /* a supergroup wired as a channel posts as ordinary messages, not
-         channel_posts — and a channel's auto-forward into its discussion
-         group arrives here too: replying to it is a comment under the post */
-      if (update.message.chat?.type === "supergroup") {
-        const story = update.message.is_automatic_forward ? storyUnderDiscussion : storyUnderSupergroup;
-        ctx.waitUntil(story(update.message, env, tg, ai).catch(() => null));
-      }
+
       guard.chatId = update.message.chat.id;
       /* a message carrying custom emojis teaches the premium table its pairs:
          entity says the id, the text under it says the emoji. One pasted
@@ -1244,7 +1236,6 @@ async function inputContext(h: H): Promise<((text: string) => Promise<void>) | n
       case "ask": return (t) => assistant.ask(h, t);
       /* the showcase wizard: link → style → (words → photos) → publish */
       case "sc_repo": return (t) => showcase.receiveRepo(h, t);
-      case "ch_link": return (t) => mychannels.receiveLink(h, t);
       case "sc_text": return (t) => showcase.receiveText(h, t);
       case "sc_photo": return (t) => showcase.receiveMedia(h, t);
       case "sc_preview": return async () => showcase.previewNudge(h);
@@ -1463,7 +1454,6 @@ async function routeCommand(cmd: string, arg: string, h: H, env: Env, ctx: Ctx) 
     case "/hash": return arg ? devutils.hash(h, arg) : devutils.hash(h, "");
     case "/jwt": return arg ? devutils.jwt(h, arg) : devutils.jwt(h);
 
-    case "/channel": case "/mychannel": return mychannels.home(h);
     case "/ai": case "/analyze": return arg ? assistant.dossier(h, normRepo(arg)) : assistant.home(h);
     case "/ask": return arg ? assistant.ask(h, arg) : assistant.home(h);
     case "/repochat": case "/chat": return assistant.repoChat(h, arg ? normRepo(arg) : "");
@@ -1641,15 +1631,6 @@ async function routeCallback(q: CallbackQuery, env: Env, ctx: Ctx, tg: Telegram,
         if (action === "main") return settings.help(h);
         break;
 
-      // ── my channel: wire, switch, unwire ──
-      case "ch":
-        if (action === "home") return mychannels.home(h);
-        if (action === "add") return mychannels.add(h);
-        if (action === "view") return mychannels.view(h, Number(args[0] ?? 0));
-        if (action === "check") return mychannels.check(h, Number(args[0] ?? 0));
-        if (action === "toggle") return mychannels.toggle(h, Number(args[0] ?? 0));
-        if (action === "off") return mychannels.disconnect(h, Number(args[0] ?? 0));
-        break;
       case "lang":
         if (action === "menu") return settings.lang(h);
         if (action === "set") return settings.setLang(h, (args[0] as any) ?? "fa");

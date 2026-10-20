@@ -66,8 +66,6 @@ export function modeKeeps(kind: string, cb: string): boolean {
   if (kind === "u:ip" || kind === "u:asn") return ns === "u";
   // the showcase wizard keeps its mode while its own buttons are pressed
   if (kind.startsWith("sc_")) return cb.startsWith("sc:");
-  // the channel-wiring step survives its own section's buttons
-  if (kind === "ch_link") return cb.startsWith("ch:");
   // repo chat, PR review, code explainer, security: any button is a new journey
   return false;
 }
@@ -97,5 +95,4 @@ export const MODE_LABELS: Record<string, string> = {
   sc_text: "معرفی پروژه — متن",
   sc_photo: "معرفی پروژه — عکس",
   sc_preview: "معرفی پروژه — پیش‌نمایش",
-  ch_link: "اتصال کانال — یوزرنیم یا فوروارد",
 };
