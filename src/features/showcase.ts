@@ -5,7 +5,7 @@ import { h1, aside, p, table, footer, hr, sendRich, richToLegacy } from "../tg/r
 import { parseRepoRef } from "../core/repo-ref";
 import { setMode, clearMode, readMode, touchMode } from "../core/mode";
 import { GithubRest } from "../github/rest";
-import { channelRepoKb } from "./channelarm";
+import { channelRepoKb, casualRepoReply } from "./channelarm";
 import { botUsername, isAdmin } from "../env";
 
 /**
@@ -514,61 +514,21 @@ export class Showcase {
     /* The post's own storyteller: the moment the showcase is live, a short
      * casual brief about the same repo lands right under it — ten honest
      * lines in a friend's tone, from live data, never from imagination.
-     * It runs after the owner's confirmation so publishing never waits on
-     * it, and still inside the update's waitUntil window so it is
-     * guaranteed to finish. A failure is swallowed: a missing storyteller
-     * must never become an error message in the channel. */
-    if (mid) await this.casualBelow(h, target.send, mid, parts.ref);
+     * The shared pipeline lives in channelarm (every wired channel uses
+     * it); it runs after the owner's confirmation so publishing never
+     * waits on it, and still inside the update's waitUntil window so it
+     * is guaranteed to finish. A failure is swallowed: a missing
+     * storyteller must never become an error message in the channel. */
+    if (mid) await casualRepoReply(h.env, h.tg, h.ai, target.send, mid, parts.ref);
     await done;
   }
 
   /** Ten casual Persian lines about the repo the channel post just
-   *  introduced, sent as a reply under that very post. */
+   *  introduced, sent as a reply under that very post — now the shared
+   *  channelarm pipeline, so the showcase and every other wired channel
+   *  tell the same story the same honest way. */
   async casualBelow(h: H, chat: string | number, mid: number, ref: string) {
-    try {
-      const gh = h.gh();
-      const [meta, readmeRaw, contribs, rels, commits] = await Promise.all([
-        gh.repo(ref, 3600).catch(() => null),
-        gh.readme(ref, 1800).catch(() => null),
-        gh.contributors(ref, 10).catch(() => [] as any[]),
-        gh.releases(ref, 5).catch(() => [] as any[]),
-        gh.commits(ref, 10).catch(() => [] as any[]),
-      ]);
-      if (!meta) return;
-      let readmeExcerpt = "";
-      try {
-        const txt = readmeRaw?.content
-          ? (readmeRaw.encoding === "base64"
-              ? atob(String(readmeRaw.content).replace(/\n/g, ""))
-              : String(readmeRaw.content))
-          : "";
-        readmeExcerpt = txt.slice(0, 1500);
-      } catch { /* a readme that will not decode is no readme */ }
-      const out = await h.ai.analyzeRepoCasual({
-        full_name: meta.full_name, description: meta.description,
-        stars: meta.stargazers_count, forks: meta.forks_count,
-        issues: meta.open_issues_count, language: meta.language,
-        topics: meta.topics ?? [], license: meta.license?.spdx_id ?? null,
-        archived: !!meta.archived, pushed_at: meta.pushed_at, created_at: meta.created_at,
-        contributors: Array.isArray(contribs) ? contribs.length : 0,
-        releases: Array.isArray(rels) ? rels.length : 0,
-        readme_excerpt: readmeExcerpt,
-        recent_commits: (Array.isArray(commits) ? commits : []).slice(0, 10).map((c: any) => c.commit?.message?.split("\n")[0]),
-      });
-      const body = String(out ?? "").trim();
-      if (body.length < 40) return;
-      const text = body.slice(0, 3500) + "\n\n🤖 تحلیل خودکار بر اساس دیتای زندهٔ گیت‌هاب";
-      const r: any = await h.tg.call("sendMessage", {
-        chat_id: chat, text, reply_to_message_id: mid,
-        link_preview_options: { is_disabled: true },
-      }).catch(() => null);
-      if (!r?.ok) {
-        /* the post may be gone or too old to reply to — the words still land */
-        await h.tg.call("sendMessage", { chat_id: chat, text, link_preview_options: { is_disabled: true } }).catch(() => null);
-      }
-    } catch (e: any) {
-      console.error("lens-swallowed", String(e?.message ?? e));
-    }
+    await casualRepoReply(h.env, h.tg, h.ai, chat, mid, ref);
   }
 
   // ── the star — a real one, from inside Telegram ──────────────────────────

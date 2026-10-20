@@ -562,7 +562,7 @@ async function handleUpdate(update: Update, env: Env, ctx: Ctx) {
     if (update.inline_query) return await routeInline(update.inline_query, env, ctx, tg, store, ai);
     /* A channel post with a GitHub link grows glass keys — architecture,
        analysis, translation, the card — as deep links any reader can press. */
-    if (update.channel_post) return await armChannelPost(update.channel_post, env, tg);
+    if (update.channel_post) return await armChannelPost(update.channel_post, env, tg, ai);
     if (update.message) {
       guard.chatId = update.message.chat.id;
       /* a message carrying custom emojis teaches the premium table its pairs:

@@ -736,6 +736,22 @@ export class AiBrain {
     );
   }
 
+  /** Any channel post, not just the ones about repos — the same storyteller
+   *  opening up what the post itself says, grounded in its own words. */
+  analyzePostCasual(text: string) {
+    return this.chat(
+      `این پست تلگرامی را با لحن خودمونی فارسی باز کن — مثل دوستی که موضوع را می‌فهمد و دارد برایت تعریف می‌کند.\n` +
+        `Post:\n"""\n${String(text ?? "").slice(0, 2500)}\n"""\n` +
+        `قواعد:\n` +
+        `- فقط از متن همین پست حرف بزن؛ عدد، آمار یا ادعای جدید که در پست نیست، نساز.\n` +
+        `- اگر پست دربارهٔ پروژه یا ابزاری است، فقط همان‌قدر که از خود پست پیداست توضیح بده.\n` +
+        `- متن ساده: بدون HTML، بدون مارک‌داون، بدون بولت و خط تیره.\n` +
+        `- ۶ تا ۹ خط کوتاه. خط اول قلاب، خط آخر جمع‌بندی یک‌خطی. حداکثر دو اموجی.\n` +
+        `- اگر متن پست فارسی نیست، جواب همچنان فارسی است.`,
+      { tier: "smart", max_tokens: 600 },
+    );
+  }
+
   /** Semantic query understanding for search: Persian/English NL → GitHub search query. */
   /**
    * Search planner, with an output sanity gate.
