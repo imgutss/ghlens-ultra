@@ -32,7 +32,7 @@ export class Admin {
     ]);
 
     const gh = new GithubRest(h.env);
-    const rl = await gh.rateLimit().catch(() => null);
+    const rl = await gh.rateLimit().catch((e: any) => { console.error("lens-ratelimit-fail", JSON.stringify({ status: e?.status, msg: String(e?.message ?? e).slice(0, 200) })); return null; });
     const core = rl?.resources?.core;
     const search = rl?.resources?.search;
     const graphql = rl?.resources?.graphql;

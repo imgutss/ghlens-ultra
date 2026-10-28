@@ -12,13 +12,22 @@ export class GithubRest {
 
   constructor(private env: Env, private token = env.GITHUB_TOKEN) {}
 
+  /* A token the API has rejected (expired or revoked) is remembered per
+     isolate for ten minutes, so a dead deployment token degrades to anonymous
+     public reads instead of blinding every screen that shares it. */
+  private static badTokens = new Map<string, number>();
+  private tokenDead(): boolean {
+    if (!this.token) return false;
+    return (GithubRest.badTokens.get(this.token.slice(-8)) ?? 0) > Date.now();
+  }
+
   private headers(): HeadersInit {
     const h: Record<string, string> = {
       accept: "application/vnd.github+json",
       "user-agent": "GitHubLensUltra/1.0 (+cloudflare-workers)",
       "x-github-api-version": "2022-11-28",
     };
-    if (this.token) h.authorization = `Bearer ${this.token}`;
+    if (this.token && !this.tokenDead()) h.authorization = `Bearer ${this.token}`;
     return h;
   }
 
@@ -32,10 +41,18 @@ export class GithubRest {
     const cached = ttl > 0 ? await this.env.CACHE.get<{ etag: string; body: string }>(key, "json").catch(() => null) : null;
 
     const url = path.startsWith("http") ? path : `https://api.github.com${path}`;
-    const res = await fetch(url, {
+    let res = await fetch(url, {
       ...init,
       headers: { ...this.headers(), ...(cached?.etag ? { "if-none-match": cached.etag } : {}), ...(init.headers as any) },
     });
+    if (res.status === 401 && this.token && !this.tokenDead()) {
+      GithubRest.badTokens.set(this.token.slice(-8), Date.now() + 600_000);
+      console.error("lens-gh-token-dead", "falling back to anonymous for 10 min");
+      res = await fetch(url, {
+        ...init,
+        headers: { ...this.headers(), ...(cached?.etag ? { "if-none-match": cached.etag } : {}), ...(init.headers as any) },
+      });
+    }
 
     if (res.status === 304 && cached) {
       const data = JSON.parse(cached.body);

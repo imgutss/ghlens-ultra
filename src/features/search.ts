@@ -1,5 +1,4 @@
 import type { H } from "../core/handler";
-import { GithubRest } from "../github/rest";
 import type { Env } from "../env";
 import { VectorIndex } from "../ai/vector";
 import { extractKeywords, scoreMatch, searchLadder } from "../search/keywords";
@@ -16,7 +15,6 @@ import { isQuestion } from "../core/ask";
  *   4. natural   — plain sentences, filters like "typescript stars>5k updated this month"
  */
 export class SearchFeature {
-  private rest(env: Env) { return new GithubRest(env); }
 
   /** Turn a free-text query into GitHub qualifiers (cached per query hash by AiBrain). */
   /**
@@ -56,7 +54,7 @@ export class SearchFeature {
     if (mode !== "semantic") {
       const chain = page > 0 ? [usedQuery] : ladder;
       for (const q of chain) {
-        const res = await this.rest(h.env).searchRepos(q, "stars", "desc", 20, page + 1).catch(() => null);
+        const res = await h.gh().searchRepos(q, "stars", "desc", 20, page + 1).catch((e: any) => { console.error("lens-search-fail", JSON.stringify({ status: e?.status, msg: String(e?.message ?? e).slice(0, 200) })); return null; });
         const items = res?.items ?? [];
         if (items.length) {
           usedQuery = q;
@@ -169,7 +167,7 @@ export class SearchFeature {
   }
 
   private async showRepo(h: H, full: string) {
-    const gh = new GithubRest(h.env);
+    const gh = h.gh();
     const m = await gh.repo(full, 300).catch(() => null);
     if (!m) return h.reply("❌ " + (h.loc === "fa" ? "مخزن یافت نشد." : "Repository not found."), undefined, !!h.cbId);
     const rendered = await h.card.render(
